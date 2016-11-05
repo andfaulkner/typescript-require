@@ -12,7 +12,7 @@ var tscScript = new vm.Script(fs.readFileSync(tsc, "utf8"), {
   filename: tsc
 });
 
-var disallowedOptions = ['outDir', 'outFile', 'rootDir'];
+var disallowedOptions = ['outDir', 'outFile'];
 
 var options = {
   exitOnError: true,
@@ -53,7 +53,7 @@ var projectBuilt = null;
  * if projectDir is specified return that otherwise return the current working directory.
  **/
 function getTsRoot() {
-    return (options.projectDir ? options.projectDir : process.cwd());
+  return (options.projectDir ? options.projectDir : process.cwd());
 }
 
 /**
@@ -63,7 +63,7 @@ function getTsRoot() {
 function compileTS (module) {
   var exitCode = 0;
   var tmpDir = path.join(getTsRoot(), options.tmpDir);
-  var relativeFolder = path.dirname(path.relative(getTsRoot(), module.filename));
+  var relativeFolder = path.dirname(path.relative(options.rootDir ? options.rootDir : getTsRoot(), module.filename));
   var jsname = path.join(tmpDir, relativeFolder, path.basename(module.filename, ".ts") + ".js");
 
   if (!isModified(module.filename, jsname)) {
@@ -76,7 +76,7 @@ function compileTS (module) {
     "--outDir",
     tmpDir,
     "--rootDir",
-    process.cwd()
+    options.rootDir || process.cwd()
   ];
   if (options.projectDir && projectBuilt === null) {
     // For more complex projects it's better to set up a tsconfig.json file with the outDir set to
@@ -106,7 +106,6 @@ function compileTS (module) {
   }
 
   if (!projectBuilt) {
-    console.log(argv);
     var proc = merge(merge({}, process), {
       argv: compact(argv),
       exit: function(code) {
